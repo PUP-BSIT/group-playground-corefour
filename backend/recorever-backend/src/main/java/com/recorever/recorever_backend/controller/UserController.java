@@ -19,13 +19,20 @@ public class UserController {
     private UserRepository repo;
 
     @PostMapping("/register-user")
-    public ResponseEntity<?> registerUser(@RequestParam String name,
-                                          @RequestParam String email,
-                                          @RequestParam String password) {
+    public ResponseEntity<?> registerUser(@RequestBody Map<String, String> payload) {
+        String name = payload.get("name");
+        String email = payload.get("email");
+        String password = payload.get("password");
+
+        if (name == null || email == null || password == null) {
+            return ResponseEntity.badRequest().body("Name, email and password are required");
+        }
+
         Map<String, Object> result = service.register(name, email, password);
         if (result.containsKey("error")) {
             return ResponseEntity.badRequest().body(result.get("error"));
         }
+
         return ResponseEntity.status(201).body(result);
     }
 
