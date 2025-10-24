@@ -1,5 +1,6 @@
 package com.recorever.recorever_backend.service;
 
+import com.recorever.recorever_backend.config.JwtUtil;
 import com.recorever.recorever_backend.model.User;
 import com.recorever.recorever_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ public class UserService {
     @Autowired
     private UserRepository repo;
 
+    @Autowired
+    private JwtUtil jwtUtil;
+
     public Map<String, Object> register(String name, String email, String password) {
         int result = repo.registerUser(name, email, password);
         if (result == -1) {
@@ -27,7 +31,9 @@ public class UserService {
         if (user == null || !BCrypt.checkpw(password, user.getPassword_hash())) {
             return Map.of("error", "Invalid email or password");
         }
-        String token = "abc123xyz456"; // mock token for now
+
+        String token = jwtUtil.generateToken(user.getUser_id(), user.getEmail());
+
         Map<String, Object> response = new HashMap<>();
         response.put("access_token", token);
         response.put("token_type", "Bearer");
