@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: frontend/recoverer_frontend
+        working-directory: frontend/recorever_frontend
 
     steps:
       - name: Checkout repository
