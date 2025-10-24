@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 
 @Repository
 public class UserRepository {
@@ -72,5 +73,19 @@ public class UserRepository {
     public boolean deleteUser(int id) {
         String sql = "UPDATE users SET is_deleted = 1 WHERE user_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, id) > 0;
+    }
+
+    public void saveRefreshToken(int userId, String token, LocalDateTime expiry) {
+        String sql = "UPDATE users SET refresh_token=?, refresh_token_expiry=? WHERE user_id=?";
+        jdbcTemplate.update(sql, token, expiry, userId);
+    }
+
+    public User findByRefreshToken(String token) {
+        try {
+            String sql = "SELECT * FROM users WHERE refresh_token=? AND is_deleted=0";
+            return jdbcTemplate.queryForObject(sql, userMapper, token);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
     }
 }

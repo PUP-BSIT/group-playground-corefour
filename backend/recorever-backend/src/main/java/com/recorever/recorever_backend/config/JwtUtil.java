@@ -10,53 +10,39 @@ import java.util.Date;
 @Component
 public class JwtUtil {
 
-    // 256-bit secret key (32+ chars)
-    private static final String SECRET_STRING = "superSecretKeyForRecoreverBackend123!";
-    private final Key SECRET_KEY = Keys.hmacShaKeyFor(SECRET_STRING.getBytes());
+    private static final String secret = "my_super_secret_key_which_is_at_least_32_chars!";
+    private final long expiration = 3600000; // 1 hour in milliseconds
 
-    private final long EXPIRATION_MS = 3600000; // 1 hour
+    private Key getSigningKey() {
+        return Keys.hmacShaKeyFor(secret.getBytes());
+    }
 
-    // Generate JWT token with userId and email
-    public String generateToken(int userId, String email) {
+    public String generateToken(int userId, String userName) {
         return Jwts.builder()
                 .setSubject(String.valueOf(userId))
-                .claim("email", email)
+                .claim("name", userName)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_MS))
-                .signWith(SECRET_KEY, SignatureAlgorithm.HS256)
+                .setExpiration(new Date(System.currentTimeMillis() + expiration))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // Validate token
-    public boolean validateToken(String token) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(SECRET_KEY)
-                    .build()
-                    .parseClaimsJws(token); // throws if invalid
-            return true;
-        } catch (JwtException | IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    // Extract userId from token
     public int getUserIdFromToken(String token) {
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
         return Integer.parseInt(claims.getSubject());
     }
 
-    // Extract email claim from token
-    public String getEmailFromToken(String token) {
-        Claims claims = Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-        return claims.get("email", String.class);
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder().setSigningKey(getSigningKey()).build().parseClaimsJws(token);
+            return true;
+        } catch (JwtException e) {
+            System.out.println("JWT validation error: " + e.getMessage());
+        }
+        return false;
     }
 }

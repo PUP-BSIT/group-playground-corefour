@@ -12,28 +12,37 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Autowired
-    private JwtFilter jwtFilter;
+    private JwtAuthenticationFilter jwtFilter;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF since we're using stateless JWTs
+            // Disable CSRF since this is a REST API (no forms)
             .csrf(csrf -> csrf.disable())
 
-            // Stateless session; Spring Security won't create session
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // Allow CORS (optional — useful if you have a frontend on a different port)
+            .cors(cors -> {})
 
-            // Authorization rules
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/login-user", "/api/register-user").permitAll() // public endpoints
-                .anyRequest().authenticated() // all other endpoints require JWT
+            // Stateless session — we use JWTs instead of sessions
+            .sessionManagement(session -> 
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
 
-            // Disable form login and HTTP Basic
+            // Define which endpoints are public and which need authentication
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers(
+                    "/api/login-user",
+                    "/api/register-user",
+                    "/api/refresh-token"
+                ).permitAll() // ✅ Public routes
+                .anyRequest().authenticated() // 🔒 Everything else requires JWT
+            )
+
+            // Disable default login/logout (we’re using JWT)
             .httpBasic(httpBasic -> httpBasic.disable())
             .formLogin(form -> form.disable())
 
-            // Add our JWT filter before Spring Security's authentication filter
+            // Add our JWT filter before the built-in username/password filter
             .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
