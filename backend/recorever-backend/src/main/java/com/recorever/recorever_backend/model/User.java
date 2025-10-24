@@ -9,7 +9,7 @@ public class User {
     private String profile_picture;
     private String phone_number;
     private String created_at;
-    private String deleted_at;
+    private boolean is_deleted;
 
     // Getters and Setters
     public int getUser_id() { return user_id; }
@@ -36,6 +36,6 @@ public class User {
     public String getCreated_at() { return created_at; }
     public void setCreated_at(String created_at) { this.created_at = created_at; }
 
-    public String getDeleted_at() { return deleted_at; }
-    public void setDeleted_at(String deleted_at) { this.deleted_at = deleted_at; }
+    public boolean getIs_deleted() { return is_deleted; }
+    public void setIs_deleted(boolean is_deleted) { this.is_deleted = is_deleted; }
 }

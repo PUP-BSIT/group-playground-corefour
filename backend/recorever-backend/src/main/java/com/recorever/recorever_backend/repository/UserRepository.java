@@ -10,7 +10,6 @@ import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-// import java.util.List;
 
 @Repository
 public class UserRepository {
@@ -30,7 +29,7 @@ public class UserRepository {
             u.setProfile_picture(rs.getString("profile_picture"));
             u.setPhone_number(rs.getString("phone_number"));
             u.setCreated_at(rs.getString("created_at"));
-            u.setDeleted_at(rs.getString("deleted_at"));
+            u.setIs_deleted(rs.getBoolean("is_deleted"));
             return u;
         }
     };
@@ -41,7 +40,7 @@ public class UserRepository {
         if (exists > 0) return -1;
 
         String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
-        String sql = "INSERT INTO users (name, email, password_hash) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO users (name, email, password_hash, is_deleted) VALUES (?, ?, ?, 0)";
         jdbcTemplate.update(sql, name, email, hashed);
 
         return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
@@ -49,7 +48,7 @@ public class UserRepository {
 
     public User findByEmail(String email) {
         try {
-            String sql = "SELECT * FROM users WHERE email = ? AND deleted_at IS NULL";
+            String sql = "SELECT * FROM users WHERE email = ? AND is_deleted = 0";
             return jdbcTemplate.queryForObject(sql, userMapper, email);
         } catch (EmptyResultDataAccessException e) {
             return null;
@@ -58,7 +57,7 @@ public class UserRepository {
 
     public User findById(int id) {
         try {
-            String sql = "SELECT * FROM users WHERE user_id = ? AND deleted_at IS NULL";
+            String sql = "SELECT * FROM users WHERE user_id = ? AND is_deleted = 0";
             return jdbcTemplate.queryForObject(sql, userMapper, id);
         } catch (EmptyResultDataAccessException e) {
             return null;
@@ -66,13 +65,12 @@ public class UserRepository {
     }
 
     public boolean updateUser(int id, String name, String phone, String picture) {
-        String sql = "UPDATE users SET name=?, phone_number=?, profile_picture=? WHERE user_id=? AND deleted_at IS NULL";
+        String sql = "UPDATE users SET name=?, phone_number=?, profile_picture=? WHERE user_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, name, phone, picture, id) > 0;
     }
 
     public boolean deleteUser(int id) {
-        String sql = "UPDATE users SET deleted_at = NOW() WHERE user_id=? AND deleted_at IS NULL";
+        String sql = "UPDATE users SET is_deleted = 1 WHERE user_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, id) > 0;
     }
 }
-
