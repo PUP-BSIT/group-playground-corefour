@@ -6,6 +6,7 @@ import com.recorever.recorever_backend.service.UserService;
 import com.recorever.recorever_backend.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -52,25 +53,20 @@ public class UserController {
     }
 
     @GetMapping("/get-user-data")
-    public ResponseEntity<?> getUser(@RequestParam int id) {
-        User user = repo.findById(id);
-        if (user == null)
-            return ResponseEntity.status(404).body("User not found");
-        return ResponseEntity.ok(user);
+    public ResponseEntity<?> getUser(Authentication authentication) {
+        User authenticatedUser = (User) authentication.getPrincipal();
+        
+        return ResponseEntity.ok(authenticatedUser);
     }
 
     @PutMapping("/update-user-data")
-    public ResponseEntity<?> updateUser(@RequestParam int id,
+    public ResponseEntity<?> updateUser(Authentication authentication,
                                         @RequestParam(required = false) String name,
                                         @RequestParam(required = false) String phone_number,
                                         @RequestParam(required = false) String profile_picture) {
+        
+        User user = (User) authentication.getPrincipal();
 
-        User user = repo.findById(id);
-        if (user == null) {
-            return ResponseEntity.status(404).body("User not found");
-        }
-
-        // Only update if provided
         if (name != null && !name.isEmpty()) {
             user.setName(name);
         }
@@ -90,21 +86,26 @@ public class UserController {
     }
 
     @DeleteMapping("/delete-user")
-    public ResponseEntity<?> deleteUser(@RequestParam int id) {
-        boolean deleted = repo.deleteUser(id);
+    public ResponseEntity<?> deleteUser(Authentication authentication) {
+        User user = (User) authentication.getPrincipal();
+        int userId = user.getUser_id();
+
+        boolean deleted = repo.deleteUser(userId);
         if (!deleted)
-            return ResponseEntity.status(404).body("User not found.");
+            return ResponseEntity.status(404).body("User not found or already deleted.");
+        
         return ResponseEntity.ok(Map.of("success", true, "message", "User account deactivated."));
     }
 
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refresh(@RequestParam String refreshToken) {
+    public ResponseEntity<?> refresh(@RequestBody Map<String, String> body) {
+        String refreshToken = body.get("refreshToken");
+
         User user = repo.findByRefreshToken(refreshToken);
         if (user == null || user.getRefresh_token_expiry().isBefore(LocalDateTime.now())) {
             return ResponseEntity.status(401).body(Map.of("error_message", "Invalid or expired refresh token"));
         }
 
-        // Generate new access token
         String accessToken = jwtUtil.generateToken(user.getUser_id(), user.getName());
 
         return ResponseEntity.ok(Map.of(
