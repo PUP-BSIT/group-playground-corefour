@@ -32,6 +32,12 @@ public class UserService {
 
     public Map<String, Object> login(String email, String password) {
         User user = repo.findByEmail(email);
+        if (user != null) {
+        System.out.println("Email: " + email);
+        System.out.println("Entered password: " + password);
+        System.out.println("DB Hash: " + user.getPassword_hash());
+        System.out.println("Matches: " + BCrypt.checkpw(password, user.getPassword_hash()));
+        }
         if (user == null || !BCrypt.checkpw(password, user.getPassword_hash())) {
             return Map.of("error", "Invalid email or password");
         }

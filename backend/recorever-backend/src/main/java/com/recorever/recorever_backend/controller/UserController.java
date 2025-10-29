@@ -44,8 +44,9 @@ public class UserController {
         String password = body.get("password");
 
         Map<String, Object> result = service.login(email, password);
+
         if (result.containsKey("error")) {
-            return ResponseEntity.status(401).body(result.get("error"));
+            return ResponseEntity.status(401).body(result);
         }
         return ResponseEntity.ok(result);
     }
