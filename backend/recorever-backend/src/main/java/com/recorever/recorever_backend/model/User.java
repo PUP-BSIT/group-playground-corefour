@@ -13,7 +13,7 @@ public class User implements UserDetails {
     private String name;
     private String email;
     private String password_hash;
-    private String role; // e.g., "USER"
+    private String role;
     private String profile_picture;
     private String phone_number;
     private String created_at;
@@ -25,12 +25,8 @@ public class User implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Returns the role prefixed with ROLE_ as required (e.g., ROLE_USER)
-        if (this.role == null || this.role.isEmpty()) {
-             // Fallback to avoid null role
-             return List.of(new SimpleGrantedAuthority("ROLE_USER")); 
-        }
-        return List.of(new SimpleGrantedAuthority("ROLE_" + this.role.toUpperCase()));
+        String userRole = (this.role == null || this.role.isEmpty()) ? "USER" : this.role.toUpperCase();
+        return List.of(new SimpleGrantedAuthority("ROLE_" + userRole));
     }
 
     @Override
@@ -43,7 +39,6 @@ public class User implements UserDetails {
         return this.email;
     }
 
-    // Default account status checks
     @Override public boolean isAccountNonExpired() { return true; }
     @Override public boolean isAccountNonLocked() { return !is_deleted; }
     @Override public boolean isCredentialsNonExpired() { return true; }
