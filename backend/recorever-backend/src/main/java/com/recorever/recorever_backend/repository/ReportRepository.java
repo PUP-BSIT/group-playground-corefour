@@ -49,6 +49,11 @@ public class ReportRepository {
         return jdbcTemplate.query(sql, reportMapper);
     }
 
+    public List<Report> getReportsByStatus(String status) {
+        String sql = "SELECT * FROM reports WHERE status = ? AND is_deleted = 0 ORDER BY date_reported DESC";
+        return jdbcTemplate.query(sql, reportMapper, status);
+    }
+
     public Report getReportById(int id) {
         try {
             String sql = "SELECT * FROM reports WHERE report_id = ? AND is_deleted = 0";
@@ -63,7 +68,6 @@ public class ReportRepository {
         return jdbcTemplate.update(sql, status, dateResolved, id) > 0;
     }
 
-    // ✅ Soft delete: only marks as deleted
     public boolean deleteReport(int id) {
         String sql = "UPDATE reports SET is_deleted = 1 WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, id) > 0;
