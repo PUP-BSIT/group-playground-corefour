@@ -36,6 +36,11 @@ public class ReportService {
     public List<Report> listAll() {
         return repo.getAllReports();
     }
+    
+    // List reports by status (used by AdminController)
+    public List<Report> listByStatus(String status) {
+        return repo.getReportsByStatus(status);
+    }
 
     public Report getById(int id) {
         return repo.getReportById(id);
