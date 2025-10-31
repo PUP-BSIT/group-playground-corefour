@@ -34,8 +34,9 @@ public class SecurityConfig {
                     "/api/login-user",
                     "/api/register-user",
                     "/api/refresh-token"
-                ).permitAll() // ✅ Public routes
-                .anyRequest().authenticated() // 🔒 Everything else requires JWT
+                ).permitAll()
+                .requestMatchers("/api/admin/**").hasRole("ADMIN") 
+                .anyRequest().authenticated() 
             )
 
             // Disable default login/logout (we’re using JWT)
