@@ -39,7 +39,7 @@ public class ReportRepository {
 
     public int createReport(int userId, String type, String itemName, String location, String description) {
         String sql = "INSERT INTO reports (user_id, type, item_name, location, description, status, date_reported, is_deleted) " +
-                     "VALUES (?, ?, ?, ?, ?, 'pending', NOW(), 0)";
+                      "VALUES (?, ?, ?, ?, ?, 'pending', NOW(), 0)";
         jdbcTemplate.update(sql, userId, type, itemName, location, description);
         return jdbcTemplate.queryForObject("SELECT LAST_INSERT_ID()", Integer.class);
     }
@@ -63,6 +63,17 @@ public class ReportRepository {
         }
     }
 
+    public boolean setInitialSurrenderCode(int id, String surrenderCode) {
+        String sql = "UPDATE reports SET surrender_code = ? WHERE report_id = ?";
+        return jdbcTemplate.update(sql, surrenderCode, id) > 0;
+    }
+
+    public boolean handleSurrender(int id, String providedCode) {
+        String sql = "UPDATE reports SET status = 'approved', surrender_code = NULL, date_resolved = NOW() " +
+                     "WHERE report_id = ? AND surrender_code = ? AND status = 'pending' AND is_deleted = 0";
+        return jdbcTemplate.update(sql, id, providedCode) > 0;
+    }
+    
     public boolean updateReport(int id, String status, String dateResolved) {
         String sql = "UPDATE reports SET status=?, date_resolved=? WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, status, dateResolved, id) > 0;
@@ -74,7 +85,7 @@ public class ReportRepository {
     }
 
     public boolean setClaimCodes(int id, String surrenderCode, String claimCode) {
-        String sql = "UPDATE reports SET surrender_code=?, claim_code=? WHERE report_id=? AND is_deleted = 0";
+        String sql = "UPDATE reports SET surrender_code=?, claim_code=?, status='claimed' WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, surrenderCode, claimCode, id) > 0;
     }
 }

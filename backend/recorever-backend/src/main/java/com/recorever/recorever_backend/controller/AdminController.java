@@ -22,26 +22,34 @@ public class AdminController {
     @Autowired
     private ClaimService claimService;
 
+    // --- REPORT MANAGEMENT ENDPOINTS ---
     @GetMapping("/reports/pending")
     public ResponseEntity<List<Report>> getPendingReports() {
         return ResponseEntity.ok(reportService.listByStatus("pending")); 
     }
 
-    @PutMapping("/report/{id}/approve")
-    public ResponseEntity<?> approveFoundReport(@PathVariable int id) {
-        // Sets status to 'approved' and records the date resolved
-        boolean updated = reportService.update(id, "approved", java.time.LocalDate.now().toString());
+    @PutMapping("/report/{id}/surrender")
+    public ResponseEntity<?> surrenderReport(@PathVariable int id, 
+                                             @RequestBody Map<String, String> body) {
+        String surrenderCode = body.get("surrender_code");
+        
+        if (surrenderCode == null || surrenderCode.isEmpty()) {
+             return ResponseEntity.badRequest().body("Surrender code is required for handover verification.");
+        }
+
+        boolean updated = reportService.handleSurrender(id, surrenderCode); 
         
         if (!updated) {
-            return ResponseEntity.badRequest().body("Report not found or update failed.");
+            return ResponseEntity.badRequest().body("Surrender failed: Report not found, status is not pending, or code is invalid.");
         }
-        return ResponseEntity.ok(Map.of("success", true, "message", "Found report approved and ready for claim."));
+        return ResponseEntity.ok(Map.of("success", true, "message", "Item received and report officially posted (status: approved)."));
     }
 
+    // --- CLAIM MANAGEMENT ENDPOINTS ---
     @PutMapping("/claim/{id}/approve")
     public ResponseEntity<?> approveClaim(@PathVariable int id) {
-        // Calls the business logic in ClaimService to update status, generate codes, and notify the user
-        boolean updated = claimService.updateStatus(id, "approved");
+        // Calls the business logic in ClaimService to update status to 'claimed', generate claim code, and notify the user
+        boolean updated = claimService.updateStatus(id, "claimed");
         
         if (!updated) {
             return ResponseEntity.badRequest().body("Claim not found or approval failed.");
