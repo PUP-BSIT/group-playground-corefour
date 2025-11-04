@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.ArrayList; // Added for ArrayList
 
 @Repository
 public class ReportRepository {
@@ -68,12 +69,40 @@ public class ReportRepository {
         return jdbcTemplate.update(sql, surrenderCode, id) > 0;
     }
 
-    public boolean handleSurrender(int id, String providedCode) {
-        String sql = "UPDATE reports SET status = 'approved', surrender_code = NULL, date_resolved = NOW() " +
-                     "WHERE report_id = ? AND surrender_code = ? AND status = 'pending' AND is_deleted = 0";
-        return jdbcTemplate.update(sql, id, providedCode) > 0;
+    // ⭐ NEW METHOD: Handles updating only item_name, location, and description
+    public boolean updateEditableReportFields(int id, String itemName, String location, String description) {
+        
+        StringBuilder sql = new StringBuilder("UPDATE reports SET ");
+        List<Object> params = new ArrayList<>();
+        
+        if (itemName != null && !itemName.isEmpty()) {
+            sql.append("item_name=?, ");
+            params.add(itemName);
+        }
+        if (location != null && !location.isEmpty()) {
+            sql.append("location=?, ");
+            params.add(location);
+        }
+        if (description != null && !description.isEmpty()) {
+            sql.append("description=?, ");
+            params.add(description);
+        }
+        
+        // Return false if no fields are provided to update
+        if (params.isEmpty()) {
+            return false; 
+        }
+        
+        // Remove trailing comma and space
+        sql.setLength(sql.length() - 2); 
+        
+        // Append WHERE clause
+        sql.append(" WHERE report_id=? AND is_deleted = 0");
+        params.add(id);
+
+        return jdbcTemplate.update(sql.toString(), params.toArray()) > 0;
     }
-    
+
     public boolean updateReport(int id, String status, String dateResolved) {
         String sql = "UPDATE reports SET status=?, date_resolved=? WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, status, dateResolved, id) > 0;
