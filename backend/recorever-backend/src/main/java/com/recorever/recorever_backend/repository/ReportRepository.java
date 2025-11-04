@@ -96,6 +96,7 @@ public class ReportRepository {
         return jdbcTemplate.update(sql.toString(), params.toArray()) > 0;
     }
 
+
     public boolean updateReport(int id, String status, String dateResolved) {
         String sql = "UPDATE reports SET status=?, date_resolved=? WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, status, dateResolved, id) > 0;
