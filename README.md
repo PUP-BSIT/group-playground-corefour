@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🌀 CoreFour Playground
+# 🌀 CoreFour Playground  
 </div>
 
 ## 👥 CoreFour Team
