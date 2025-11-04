@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
-import java.util.ArrayList; // Added for ArrayList
+import java.util.ArrayList;
 
 @Repository
 public class ReportRepository {
@@ -96,10 +96,14 @@ public class ReportRepository {
         return jdbcTemplate.update(sql.toString(), params.toArray()) > 0;
     }
 
-
     public boolean updateReport(int id, String status, String dateResolved) {
         String sql = "UPDATE reports SET status=?, date_resolved=? WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, status, dateResolved, id) > 0;
+    }
+
+    public boolean updateStatus(int reportId, String status) {
+        String sql = "UPDATE reports SET status = ? WHERE report_id = ?";
+        return jdbcTemplate.update(sql, status, reportId) > 0;
     }
 
     public boolean deleteReport(int id) {
@@ -108,7 +112,7 @@ public class ReportRepository {
     }
 
     public boolean setClaimCodes(int id, String surrenderCode, String claimCode) {
-        String sql = "UPDATE reports SET surrender_code=?, claim_code=?, status='claimed' WHERE report_id=? AND is_deleted = 0";
+        String sql = "UPDATE reports SET surrender_code=?, claim_code=? WHERE report_id=? AND is_deleted = 0";
         return jdbcTemplate.update(sql, surrenderCode, claimCode, id) > 0;
     }
 }

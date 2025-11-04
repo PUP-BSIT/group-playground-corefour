@@ -54,18 +54,26 @@ public class AdminController {
     // --- CLAIM MANAGEMENT ENDPOINTS ---
     @PutMapping("/claim/{id}/approve")
     public ResponseEntity<?> approveClaim(@PathVariable int id) {
-        // Calls the business logic in ClaimService to update status to 'claimed', generate claim code, and notify the user
-        boolean updated = claimService.updateStatus(id, "claimed");
+        boolean updated = claimService.updateStatus(id, "approved");
         
         if (!updated) {
             return ResponseEntity.badRequest().body("Claim not found or approval failed.");
         }
-        return ResponseEntity.ok(Map.of("success", true, "message", "Claim approved. Codes generated and user notified."));
+        return ResponseEntity.ok(Map.of("success", true, "message", "Claim approved. Claim code generated and user notified."));
+    }
+
+    @PutMapping("/claim/{id}/finalize")
+    public ResponseEntity<?> finalizeClaim(@PathVariable int id) {
+        boolean updated = claimService.updateStatus(id, "claimed");
+        
+        if (!updated) {
+            return ResponseEntity.badRequest().body("Claim not found or finalization failed.");
+        }
+        return ResponseEntity.ok(Map.of("success", true, "message", "Item successfully collected. Claim and Report statuses updated to 'claimed'."));
     }
 
     @PutMapping("/claim/{id}/reject")
     public ResponseEntity<?> rejectClaim(@PathVariable int id) {
-        // Calls the business logic in ClaimService to update status and notify the user
         boolean updated = claimService.updateStatus(id, "rejected");
         
         if (!updated) {
